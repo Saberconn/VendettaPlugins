@@ -1,0 +1,14 @@
+{
+  "name": "Show Image Links",
+  "description": "Shows image links if the message is just a linked image.",
+  "authors": [
+    {
+      "name": "Cynosphere",
+      "id": "150745989836308480"
+    }
+  ],
+  "main": "src/index.ts",
+  "vendetta": {
+    "icon": "ic_link"
+  }
+}
