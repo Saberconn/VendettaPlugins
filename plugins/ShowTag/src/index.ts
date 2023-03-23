@@ -16,6 +16,7 @@ const unpatch = before("updateRows", DCDChatManager, (args) => {
 
     const user = UserStore.getUser(message.authorId);
     if (!user) continue;
+    if (user.discriminator == "0000") continue;
     const oldUsername = message.username;
 
     if (oldUsername != user.username) {
@@ -24,17 +25,18 @@ const unpatch = before("updateRows", DCDChatManager, (args) => {
       message.username += "#" + user.discriminator;
     }
 
-    if (message.referencedMessage) {
+    if (message.referencedMessage?.message?.username) {
       const message = row.message.referencedMessage.message;
       const user = UserStore.getUser(message.authorId);
       const oldUsername = message.username.replace("@", "");
 
-      if (user != null) {
-        if (oldUsername != user.username) {
-          message.username += " (" + user.tag + ")";
-        } else {
-          message.username += "#" + user.discriminator;
-        }
+      if (!user) return;
+      if (user.discriminator == "0000") return;
+
+      if (oldUsername != user.username) {
+        message.username += " (" + user.tag + ")";
+      } else {
+        message.username += "#" + user.discriminator;
       }
     }
   }
