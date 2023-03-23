@@ -9,7 +9,7 @@ const unpatch = before("updateRows", DCDChatManager, (args) => {
   const rows = JSON.parse(args[1]);
 
   for (const row of rows) {
-    if (row.type !== 1 || !row?.message?.username || !row?.message.authorId)
+    if (row.type !== 1 || !row?.message?.username || !row?.message?.authorId)
       continue;
 
     const message = row.message;
