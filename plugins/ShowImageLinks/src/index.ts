@@ -13,7 +13,7 @@ const unpatch = before("updateRows", DCDChatManager, (args) => {
     let imageCount = 0;
     const urls = [];
     for (const embed of row.message.embeds) {
-      if (embed.type == "image") {
+      if (embed.type == "image" || embed.type == "gifv") {
         imageCount++;
         urls.push(embed.url);
       }
