@@ -16,13 +16,18 @@ const unpatch = before("updateRows", DCDChatManager, (args) => {
 
     const user = UserStore.getUser(message.authorId);
     if (!user) continue;
-    if (user.discriminator == "0000") continue;
-    const oldUsername = message.username;
+    if (user.bot && user.discriminator == "0000") continue;
 
-    if (oldUsername != user.username) {
-      message.username += " (" + user.tag + ")";
+    if (user.discriminator == "0") {
+      message.username += " (@" + user.username + ")";
     } else {
-      message.username += "#" + user.discriminator;
+      const oldUsername = message.username;
+
+      if (oldUsername != user.username) {
+        message.username += " (" + user.tag + ")";
+      } else {
+        message.username += "#" + user.discriminator;
+      }
     }
 
     if (message.referencedMessage?.message?.username) {
@@ -31,12 +36,16 @@ const unpatch = before("updateRows", DCDChatManager, (args) => {
       const oldUsername = message.username.replace("@", "");
 
       if (!user) return;
-      if (user.discriminator == "0000") return;
+      if (user.bot && user.discriminator == "0000") return;
 
-      if (oldUsername != user.username) {
-        message.username += " (" + user.tag + ")";
+      if (user.discriminator == "0") {
+        message.username += " (@" + user.username + ")";
       } else {
-        message.username += "#" + user.discriminator;
+        if (oldUsername != user.username) {
+          message.username += " (" + user.tag + ")";
+        } else {
+          message.username += "#" + user.discriminator;
+        }
       }
     }
   }
