@@ -1,0 +1,14 @@
+{
+  "name": "🗿",
+  "description": "🗿",
+  "authors": [
+    {
+      "name": "Cynosphere",
+      "id": "150745989836308480"
+    }
+  ],
+  "main": "src/index.ts",
+  "vendetta": {
+    "icon": "ic_speaker"
+  }
+}
