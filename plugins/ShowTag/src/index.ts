@@ -1,24 +1,20 @@
-import {before} from "@vendetta/patcher";
-import {ReactNative} from "@vendetta/metro/common";
-import {findByStoreName} from "@vendetta/metro";
+import {after} from "@vendetta/patcher";
+import {findByName, findByStoreName} from "@vendetta/metro";
 
-const {DCDChatManager} = ReactNative.NativeModules;
+const RowManager = findByName("RowManager");
 const UserStore = findByStoreName("UserStore");
 
-const unpatch = before("updateRows", DCDChatManager, (args) => {
-  const rows = JSON.parse(args[1]);
+let unpatch: Function;
 
-  for (const row of rows) {
-    if (row.type !== 1 || !row?.message?.username || !row?.message?.authorId)
-      continue;
-
-    const message = row.message;
+export const onLoad = () => {
+  unpatch = after("generate", RowManager.prototype, ([row], {message}) => {
+    if (row.rowType !== 1) return;
 
     const user = UserStore.getUser(message.authorId);
-    if (!user) continue;
-    if (user.bot && user.discriminator == "0000") continue;
+    if (!user) return;
+    if (user.bot && user.discriminator == "0000") return;
 
-    if (user.discriminator == "0") {
+    if (user.discriminator == "0" && message.username != user.username) {
       message.username += " (@" + user.username + ")";
     } else {
       const oldUsername = message.username;
@@ -31,28 +27,26 @@ const unpatch = before("updateRows", DCDChatManager, (args) => {
     }
 
     if (message.referencedMessage?.message?.username) {
-      const message = row.message.referencedMessage.message;
-      const user = UserStore.getUser(message.authorId);
-      const oldUsername = message.username.replace("@", "");
+      const replyMessage = message.referencedMessage.message;
+      const user = UserStore.getUser(replyMessage.authorId);
+      const oldUsername = replyMessage.username.replace("@", "");
 
       if (!user) return;
       if (user.bot && user.discriminator == "0000") return;
 
-      if (user.discriminator == "0") {
-        message.username += " (@" + user.username + ")";
+      if (user.discriminator == "0" && replyMessage.username != user.username) {
+        replyMessage.username += " (@" + user.username + ")";
       } else {
         if (oldUsername != user.username) {
-          message.username += " (" + user.tag + ")";
+          replyMessage.username += " (" + user.tag + ")";
         } else {
-          message.username += "#" + user.discriminator;
+          replyMessage.username += "#" + user.discriminator;
         }
       }
     }
-  }
-
-  args[1] = JSON.stringify(rows);
-});
+  });
+};
 
 export const onUnload = () => {
-  unpatch();
+  unpatch?.();
 };

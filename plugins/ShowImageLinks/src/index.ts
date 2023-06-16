@@ -1,18 +1,17 @@
-import {before} from "@vendetta/patcher";
-import {ReactNative} from "@vendetta/metro/common";
+import {findByName} from "@vendetta/metro";
+import {after} from "@vendetta/patcher";
 
-const {DCDChatManager} = ReactNative.NativeModules;
+const RowManager = findByName("RowManager");
 
-const unpatch = before("updateRows", DCDChatManager, (args) => {
-  const rows = JSON.parse(args[1]);
+let unpatch: Function;
 
-  for (const row of rows) {
-    if (row.type !== 1 || !row?.message?.embeds || !row?.message?.content)
-      continue;
+export const onLoad = () => {
+  unpatch = after("generate", RowManager.prototype, ([row], {message}) => {
+    if (row.rowType !== 1 || !message?.embeds || !message?.content) return;
 
     let imageCount = 0;
     const urls = [];
-    for (const embed of row.message.embeds) {
+    for (const embed of message.embeds) {
       if (embed.type == "image" || embed.type == "gifv") {
         imageCount++;
         urls.push(embed.url);
@@ -40,14 +39,12 @@ const unpatch = before("updateRows", DCDChatManager, (args) => {
       }
     }
 
-    if (row.message.content.length == 0 && imageCount > 0) {
-      row.message.content.push(...linkContent);
+    if (message.content.length == 0 && imageCount > 0) {
+      message.content.push(...linkContent);
     }
-  }
-
-  args[1] = JSON.stringify(rows);
-});
+  });
+};
 
 export const onUnload = () => {
-  unpatch();
+  unpatch?.();
 };
