@@ -14,8 +14,9 @@ export const onLoad = () => {
     if (!user) return;
     if (user.bot && user.discriminator == "0000") return;
 
-    if (user.discriminator == "0" && message.username != user.username) {
-      message.username += " (@" + user.username + ")";
+    if (user.discriminator == "0") {
+      if (message.username != user.username)
+        message.username += " (@" + user.username + ")";
     } else {
       const oldUsername = message.username;
 
@@ -34,8 +35,9 @@ export const onLoad = () => {
       if (!user) return;
       if (user.bot && user.discriminator == "0000") return;
 
-      if (user.discriminator == "0" && replyMessage.username != user.username) {
-        replyMessage.username += " (@" + user.username + ")";
+      if (user.discriminator == "0") {
+        if (replyMessage.username != user.username)
+          replyMessage.username += " (@" + user.username + ")";
       } else {
         if (oldUsername != user.username) {
           replyMessage.username += " (" + user.tag + ")";
