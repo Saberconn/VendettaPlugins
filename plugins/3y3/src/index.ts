@@ -62,13 +62,11 @@ function parseNodes(nodes: ASTNode[]) {
             {
               content: [
                 {
-                  content: text.replace(REGEX_3Y3, (text: string) =>
-                    [...text]
-                      .map((char) =>
-                        String.fromCodePoint(char.codePointAt(0) - 0xe0000)
-                      )
-                      .join("")
-                  ),
+                  content: [...text]
+                    .map((char) =>
+                      String.fromCodePoint(char.codePointAt(0) - 0xe0000)
+                    )
+                    .join(""),
                   type: "text",
                 },
               ],
