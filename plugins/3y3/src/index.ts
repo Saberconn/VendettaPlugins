@@ -1,9 +1,10 @@
 import {after} from "@vendetta/patcher";
-import {findByName} from "@vendetta/metro";
+import {findByName, findByProps} from "@vendetta/metro";
 import {ReactNative} from "@vendetta/metro/common";
 import {registerCommand} from "@vendetta/commands";
 
 const RowManager = findByName("RowManager");
+const MarkupUtils = findByProps("parseToAST");
 
 // FIXME: remove when upstream fixes types not getting exported
 enum ApplicationCommandInputType {
@@ -45,7 +46,7 @@ const patches: Function[] = [];
 
 const REGEX_3Y3 = /([\u{e0020}-\u{e007e}]{1,})/u;
 
-function parseNodes(nodes: ASTNode[]) {
+function parseNodes(nodes: ASTNode[], channelId: string) {
   for (const index in nodes) {
     const node = nodes[index];
     if (typeof node.content === "string") {
@@ -60,31 +61,33 @@ function parseNodes(nodes: ASTNode[]) {
         nodes.splice(Number(index) + 1, 0, {
           content: [
             {
-              content: [
-                {
-                  content: [...text]
-                    .map((char) =>
-                      String.fromCodePoint(char.codePointAt(0) - 0xe0000)
-                    )
-                    .join(""),
-                  type: "text",
-                },
-              ],
+              content: MarkupUtils.parseToAST(
+                [...text]
+                  .map((char) =>
+                    String.fromCodePoint(char.codePointAt(0) - 0xe0000)
+                  )
+                  .join(""),
+                {channelId}
+              ),
               type: "em",
             },
           ],
           type: "link",
           target: "usernameOnClick",
           context: {
-            action: "0",
-            userId: "0",
-            linkColor: ReactNative.processColor("#6a5acd"),
-            messageChannelId: "0",
+            username: 1,
+            usernameOnClick: {
+              action: "0",
+              userId: "0",
+              linkColor: ReactNative.processColor("slateblue"),
+              messageChannelId: "0",
+            },
+            medium: true,
           },
         });
       }
     } else if (Array.isArray(node.content)) {
-      parseNodes(node.content);
+      parseNodes(node.content, channelId);
     }
   }
 }
@@ -94,7 +97,7 @@ export const onLoad = () => {
     after("generate", RowManager.prototype, ([row], {message}) => {
       if (row.rowType !== 1) return;
 
-      if (message.content) parseNodes(message.content);
+      if (message.content) parseNodes(message.content, message.channelId);
     })
   );
   patches.push(
