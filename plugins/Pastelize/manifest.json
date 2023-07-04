@@ -1,0 +1,14 @@
+{
+  "name": "Pastelize",
+  "description": "Pastelize (uncolored) names based on user ID",
+  "authors": [
+    {
+      "name": "Cynosphere",
+      "id": "150745989836308480"
+    }
+  ],
+  "main": "src/index.ts",
+  "vendetta": {
+    "icon": "ic_custom_color"
+  }
+}
