@@ -10,18 +10,21 @@ export const onLoad = () => {
   unpatch = after("generate", RowManager.prototype, ([row], {message}) => {
     if (row.rowType !== 1) return;
 
-    const user = UserStore.getUser(message.authorId);
+    const user = row.message.author;
     if (!user) return;
     if (user.bot && user.discriminator == "0000") return;
 
     if (user.discriminator == "0") {
-      if (message.username != user.username)
+      if (row.message.nick && row.message.nick != user.username) {
+        message.username = `${row.message.nick} (@${user.username})`;
+      } else if (message.username != user.username) {
         message.username += " (@" + user.username + ")";
+      }
     } else {
-      const oldUsername = message.username;
-
-      if (oldUsername != user.username) {
-        message.username += " (" + user.tag + ")";
+      if (row.message.nick && row.message.nick != user.username) {
+        message.username = `${row.message.nick} (${user.username}#${user.discriminator})`;
+      } else if (message.username != user.username) {
+        message.username += ` (${user.username}#${user.discriminator})`;
       } else {
         message.username += "#" + user.discriminator;
       }
