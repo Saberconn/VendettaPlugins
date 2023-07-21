@@ -1,0 +1,14 @@
+{
+  "name": "Compact Mode",
+  "description": "Removes message headers for inline usernames",
+  "authors": [
+    {
+      "name": "Cynosphere",
+      "id": "150745989836308480"
+    }
+  ],
+  "main": "src/index.ts",
+  "vendetta": {
+    "icon": "icon-thread-browser"
+  }
+}
