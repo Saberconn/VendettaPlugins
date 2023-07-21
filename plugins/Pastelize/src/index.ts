@@ -1,15 +1,51 @@
 import {after} from "@vendetta/patcher";
-import {findByName, findByStoreName} from "@vendetta/metro";
+import {findByName, findByStoreName, findByProps} from "@vendetta/metro";
 import {storage} from "@vendetta/plugin";
 import {pastelize} from "./util";
 
 const RowManager = findByName("RowManager");
 const MessageStore = findByStoreName("MessageStore");
+const GuildMemberStore = findByStoreName("GuildMemberStore");
+const ColorUtils = findByProps("int2hex");
 
 let unpatch: Function;
 
-function processMessage(message: Record<string, any>) {
+function recurseNodeForMentions(
+  nodes: Record<string, any>[],
+  guildId: string | null,
+) {
+  for (const node of nodes) {
+    if (
+      node.type == "mention" &&
+      node.userId != null &&
+      node.colorString == null
+    ) {
+      const member = GuildMemberStore.getMember(guildId, node.userId);
+      if (guildId != null && member == null) return;
+
+      const colorHex = ColorUtils.int2hex(pastelize(node.userId, 0.85, 0.75));
+      const color = ColorUtils.hex2int(colorHex);
+      node.roleColor = color;
+      node.color = color;
+      node.colorString = colorHex;
+    } else if (Array.isArray(node.content)) {
+      recurseNodeForMentions(node.content, guildId);
+    }
+  }
+}
+
+function processMessage(
+  message: Record<string, any>,
+  rowMessage: Record<string, any> | null,
+) {
   const realMessage = MessageStore.getMessage(message.channelId, message.id);
+  const member = GuildMemberStore.getMember(message.guildId, message.authorId);
+
+  if (message.content) {
+    recurseNodeForMentions(message.content, message.guildId);
+  }
+
+  if (message.guildId && member == null) return;
 
   const pastelizeAll = storage.pastelizeAll ?? false;
   const webhookName = storage.webhookName ?? true;
@@ -23,7 +59,10 @@ function processMessage(message: Record<string, any>) {
       toHash = realMessage.webhookId;
     }
   } else {
-    if ((!message.roleColor && !pastelizeAll) || pastelizeAll) {
+    if (
+      (!(rowMessage?.colorString ?? message.roleColor) && !pastelizeAll) ||
+      pastelizeAll
+    ) {
       toHash = message.authorId;
     }
   }
@@ -61,10 +100,10 @@ export const onLoad = () => {
   unpatch = after("generate", RowManager.prototype, ([row], {message}) => {
     if (row.rowType !== 1) return;
 
-    processMessage(message);
+    processMessage(message, row.message);
 
     if (message.referencedMessage?.message) {
-      processMessage(message.referencedMessage.message);
+      processMessage(message.referencedMessage.message, null);
     }
   });
 };
