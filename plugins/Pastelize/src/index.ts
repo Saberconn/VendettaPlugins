@@ -4,7 +4,6 @@ import {storage} from "@vendetta/plugin";
 import {pastelize} from "./util";
 
 const RowManager = findByName("RowManager");
-const MessageStore = findByStoreName("MessageStore");
 const GuildMemberStore = findByStoreName("GuildMemberStore");
 const ColorUtils = findByProps("int2hex");
 
@@ -38,25 +37,25 @@ function processMessage(
   message: Record<string, any>,
   rowMessage: Record<string, any> | null,
 ) {
-  const realMessage = MessageStore.getMessage(message.channelId, message.id);
   const member = GuildMemberStore.getMember(message.guildId, message.authorId);
 
   if (message.content) {
     recurseNodeForMentions(message.content, message.guildId);
   }
 
-  if (message.guildId && member == null) return;
+  if (message.guildId && member == null && rowMessage?.webhookId == null)
+    return;
 
   const pastelizeAll = storage.pastelizeAll ?? false;
   const webhookName = storage.webhookName ?? true;
   const pastelizeContent = storage.pastelizeContent ?? false;
 
   let toHash: string | null;
-  if (realMessage?.webhookId) {
+  if (rowMessage?.webhookId != null) {
     if (webhookName) {
       toHash = message.username;
     } else {
-      toHash = realMessage.webhookId;
+      toHash = rowMessage.webhookId;
     }
   } else {
     if (
