@@ -302,17 +302,15 @@ export const onLoad = () => {
           },
         };
 
-        if (
-          replyMessage.attachments?.length > 0 &&
-          message.referencedMessage.systemContent
-        ) {
+        if (message.referencedMessage.systemContent) {
+          const systemContent = message.referencedMessage.systemContent;
           delete message.referencedMessage.systemContent;
           if (!replyMessage.content) {
             replyMessage.content = [
               {
                 content: [
                   {
-                    content: i18n.Messages.REPLY_QUOTE_NO_TEXT_CONTENT_MOBILE,
+                    content: systemContent,
                     type: "text",
                   },
                 ],
@@ -321,13 +319,27 @@ export const onLoad = () => {
             ];
           }
 
-          // using .push triggers some caching thing and the emoji duplicates
-          // every channel load
-          replyMessage.content = [
-            ...replyMessage.content,
-            {content: " ", type: "text"},
-            MarkupUtils.parseToAST("\u{1f5bc}")[0],
-          ];
+          if (replyMessage.attachments?.length > 0) {
+            // using .push triggers some caching thing and the emoji duplicates
+            // every channel load
+            replyMessage.content = [
+              ...replyMessage.content,
+              {content: " ", type: "text"},
+              MarkupUtils.parseToAST("\u{1f5bc}")[0],
+            ];
+          } else if (replyMessage.stickers?.length > 0) {
+            replyMessage.content = [
+              ...replyMessage.content,
+              {content: " ", type: "text"},
+              MarkupUtils.parseToAST("\u2728")[0],
+            ];
+          } else if (replyMessage.embeds?.length > 0) {
+            replyMessage.content = [
+              ...replyMessage.content,
+              {content: " ", type: "text"},
+              MarkupUtils.parseToAST("\u{1f5d2}")[0],
+            ];
+          }
         }
 
         replyMessage.content = [
