@@ -1,6 +1,6 @@
 import {after, before} from "@vendetta/patcher";
 import {findByName, findByProps, findByStoreName} from "@vendetta/metro";
-import {ReactNative} from "@vendetta/metro/common";
+import {ReactNative, i18n} from "@vendetta/metro/common";
 import {storage} from "@vendetta/plugin";
 import {rawColors, semanticColors} from "@vendetta/ui";
 
@@ -19,12 +19,9 @@ function createUsername(
   rowMessage: Record<string, any>,
 ) {
   const out = [];
-  const tagColor = ColorUtils.hex2int(
-    message.tagBackgroundColor
-      ? ColorUtils.int2hex(message.tagBackgroundColor)
-      : rawColors.BRAND_500,
-  );
-  const timestampColor = ColorUtils.hex2int(
+  const tagColor =
+    message.tagBackgroundColor ?? ReactNative.processColor(rawColors.BRAND_500);
+  const timestampColor = ReactNative.processColor(
     resolveSemanticColor(ThemeStore.theme, semanticColors.TEXT_MUTED),
   );
 
@@ -35,20 +32,27 @@ function createUsername(
   const guild = GuildStore.getGuild(message.guildId);
 
   if (rowMessage.timestamp && !storage.noInline) {
-    console.log(timestampColor);
     out.push({
       content: [
         {
           content: storage.inlineTimestamps
             ? rowMessage.__customTimestamp ?? rowMessage.timestamp.calendar()
             : rowMessage.timestamp.format("HH:mm:ss"),
-          type: "text",
+          type: "inlineCode",
         },
       ],
-      type: "mention",
-      roleColor: timestampColor,
-      color: timestampColor,
-      colorString: ColorUtils.int2hex(timestampColor),
+      type: "link",
+      target: "usernameOnClick",
+      context: {
+        username: 1,
+        usernameOnClick: {
+          action: "0",
+          userId: "0",
+          linkColor: timestampColor,
+          messageChannelId: "0",
+        },
+        medium: true,
+      },
     });
     out.push({
       content: " ",
@@ -93,13 +97,21 @@ function createUsername(
       content: [
         {
           content: message.tagText,
-          type: "text",
+          type: "inlineCode",
         },
       ],
-      type: "mention",
-      roleColor: tagColor,
-      color: tagColor,
-      colorString: ColorUtils.int2hex(tagColor),
+      type: "link",
+      target: "usernameOnClick",
+      context: {
+        username: 1,
+        usernameOnClick: {
+          action: "0",
+          userId: "0",
+          linkColor: tagColor,
+          messageChannelId: "0",
+        },
+        medium: true,
+      },
     });
     out.push({
       content: " ",
@@ -168,13 +180,21 @@ function createUsername(
       content: [
         {
           content: message.tagText,
-          type: "text",
+          type: "inlineCode",
         },
       ],
-      type: "mention",
-      roleColor: tagColor,
-      color: tagColor,
-      colorString: ColorUtils.int2hex(tagColor),
+      type: "link",
+      target: "usernameOnClick",
+      context: {
+        username: 1,
+        usernameOnClick: {
+          action: "0",
+          userId: "0",
+          linkColor: tagColor,
+          messageChannelId: "0",
+        },
+        medium: true,
+      },
     });
   }
 
@@ -188,13 +208,21 @@ function createUsername(
         {
           content:
             rowMessage.__customTimestamp ?? rowMessage.timestamp.calendar(),
-          type: "text",
+          type: "inlineCode",
         },
       ],
-      type: "mention",
-      roleColor: timestampColor,
-      color: timestampColor,
-      colorString: ColorUtils.int2hex(timestampColor),
+      type: "link",
+      target: "usernameOnClick",
+      context: {
+        username: 1,
+        usernameOnClick: {
+          action: "0",
+          userId: "0",
+          linkColor: timestampColor,
+          messageChannelId: "0",
+        },
+        medium: true,
+      },
     });
   }
 
@@ -245,6 +273,69 @@ export const onLoad = () => {
       }
       message.content = [...usernameNode, ...(message.content ?? [])];
       if (!storage.noInline) recurseNodeForEmojis(message.content);
+
+      if (message.referencedMessage?.message && storage.noReplyAvatars) {
+        const replyMessage = message.referencedMessage.message;
+        replyMessage.avatarURL = undefined;
+        const usernameNode = {
+          content: [
+            {
+              content: [
+                {
+                  content: replyMessage.username,
+                  type: "text",
+                },
+              ],
+              type: "strong",
+            },
+          ],
+          type: "link",
+          target: "usernameOnClick",
+          context: {
+            username: true,
+            usernameOnClick: {
+              action: "bindTapUsername",
+              userId: replyMessage.authorId,
+              linkColor: replyMessage.usernameColor,
+              messageChannelId: replyMessage.channelId,
+            },
+          },
+        };
+
+        if (
+          replyMessage.attachments.length > 0 &&
+          message.referencedMessage.systemContent
+        ) {
+          delete message.referencedMessage.systemContent;
+          if (!replyMessage.content) {
+            replyMessage.content = [
+              {
+                content: [
+                  {
+                    content: i18n.Messages.REPLY_QUOTE_NO_TEXT_CONTENT_MOBILE,
+                    type: "text",
+                  },
+                ],
+                type: "em",
+              },
+            ];
+          }
+
+          // using .push triggers some caching thing and the emoji duplicates
+          // every channel load
+          replyMessage.content = [
+            ...replyMessage.content,
+            {content: " ", type: "text"},
+            MarkupUtils.parseToAST("\u{1f5bc}")[0],
+          ];
+        }
+
+        replyMessage.content = [
+          usernameNode,
+          {content: " ", type: "text"},
+          ...(replyMessage.content ?? []),
+        ];
+      }
     }),
   );
 };

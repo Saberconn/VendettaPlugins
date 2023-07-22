@@ -53,6 +53,12 @@ export default function CompactModeSettings() {
           value={storage.inlineTimestamps ?? false}
           onValueChange={(value: boolean) => (storage.inlineTimestamps = value)}
         />
+        <TableSwitchRow
+          label="Hide Reply Avatars"
+          icon={IconAvatar}
+          value={storage.noReplyAvatars ?? false}
+          onValueChange={(value: boolean) => (storage.noReplyAvatars = value)}
+        />
       </TableRowGroup>
     </ScrollView>
   );
