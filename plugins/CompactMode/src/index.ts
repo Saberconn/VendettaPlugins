@@ -303,7 +303,7 @@ export const onLoad = () => {
         };
 
         if (
-          replyMessage.attachments.length > 0 &&
+          replyMessage.attachments?.length > 0 &&
           message.referencedMessage.systemContent
         ) {
           delete message.referencedMessage.systemContent;
