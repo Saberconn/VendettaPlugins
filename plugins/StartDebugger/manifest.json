@@ -1,0 +1,14 @@
+{
+  "name": "Start Debugger",
+  "description": "Autostart and command for debugger",
+  "authors": [
+    {
+      "name": "Cynosphere",
+      "id": "150745989836308480"
+    }
+  ],
+  "main": "src/index.ts",
+  "vendetta": {
+    "icon": "debug"
+  }
+}
