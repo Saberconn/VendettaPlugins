@@ -119,12 +119,16 @@ function createUsername(
     });
   }
 
+  let name = message.username;
+  if (message.username == rowMessage.author.username) {
+    name = rowMessage.nick ?? rowMessage.author.globalName ?? message.username;
+  }
   const usernameNode = {
     content: [
       {
         content: [
           {
-            content: message.username,
+            content: name,
             type: "text",
           },
         ],
