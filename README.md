@@ -1,3 +1,4 @@
+# Vendetta Plugins
 # Proxied
 ## [Show Image Links](https://vd-plugins.github.io/proxy/cynosphere.github.io/VendettaPlugins/ShowImageLinks/)
 Shows image links if the message is just a linked image.
@@ -17,13 +18,5 @@ Always animates guild icons and avatars.
 ## [Pastelize](https://vd-plugins.github.io/proxy/cynosphere.github.io/VendettaPlugins/Pastelize/)
 Pastelize (uncolored) names based on user ID
 
-# Intentionally Unproxied
-Made for my own use but I do not want to have these known to the broader
-populus. **I will not do anything malicious, but you still run the risk of using
-unproxied plugins.** Also you'll have to manually create links for these. :^)
-
-<details>
-  <summary><h2>3y3</h2></summary>
-  Second sight
-</details>
-
+## [Compact Mode](https://vd-plugins.github.io/proxy/cynosphere.github.io/VendettaPlugins/CompactMode/)
+A configurable mobile reimplementation of compact mode
