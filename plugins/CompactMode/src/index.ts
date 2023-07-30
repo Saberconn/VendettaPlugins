@@ -14,13 +14,59 @@ const GuildMemberStore = findByStoreName("GuildMemberStore");
 const GuildStore = findByStoreName("GuildStore");
 const MarkupUtils = findByProps("parseToAST");
 
+enum MessageTypes {
+  DEFAULT,
+  RECIPIENT_ADD,
+  RECIPIENT_REMOVE,
+  CALL,
+  CHANNEL_NAME_CHANGE,
+  CHANNEL_ICON_CHANGE,
+  CHANNEL_PINNED_MESSAGE,
+  USER_JOIN,
+  GUILD_BOOST,
+  GUILD_BOOST_TIER_1,
+  GUILD_BOOST_TIER_2,
+  GUILD_BOOST_TIER_3,
+  CHANNEL_FOLLOW_ADD,
+  GUILD_STREAM,
+  GUILD_DISCOVERY_DISQUALIFIED,
+  GUILD_DISCOVERY_REQUALIFIED,
+  GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING,
+  GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING,
+  THREAD_CREATED,
+  REPLY,
+  CHAT_INPUT_COMMAND,
+  THREAD_STARTER_MESSAGE,
+  GUILD_INVITE_REMINDER,
+  CONTEXT_MENU_COMMAND,
+  AUTO_MODERATION_ACTION,
+  ROLE_SUBSCRIPTION_PURCHASE,
+  INTERACTION_PREMIUM_UPSELL,
+  STAGE_START,
+  STAGE_END,
+  STAGE_SPEAKER,
+  STAGE_RAISE_HAND,
+  STAGE_TOPIC,
+  GUILD_APPLICATION_PREMIUM_SUBSCRIPTION,
+  PRIVATE_CHANNEL_INTEGRATION_ADDED,
+  PRIVATE_CHANNEL_INTEGRATION_REMOVED,
+  PREMIUM_REFERRAL,
+  GUILD_INCIDENT_ALERT_MODE_ENABLED,
+  GUILD_INCIDENT_ALERT_MODE_DISABLED,
+  GUILD_INCIDENT_REPORT_RAID,
+  GUILD_INCIDENT_REPORT_FALSE_ALARM,
+}
+
 function createUsername(
   message: Record<string, any>,
   rowMessage: Record<string, any>,
 ) {
   const out = [];
-  const tagColor =
-    message.tagBackgroundColor ?? ReactNative.processColor(rawColors.BRAND_500);
+  const tagColor = ColorUtils.hex2int(
+    message.tagBackgroundColor
+      ? ColorUtils.int2hex(message.tagBackgroundColor)
+      : rawColors.BRAND_500,
+  );
   const timestampColor = ReactNative.processColor(
     resolveSemanticColor(ThemeStore.theme, semanticColors.TEXT_MUTED),
   );
@@ -60,30 +106,25 @@ function createUsername(
     });
   }
 
-  if (
-    (storage.avatars ?? false) &&
-    ReactNative.Platform.OS != "android" &&
-    rowMessage.author.avatar != null
-  ) {
+  if ((storage.avatars ?? false) && rowMessage.author.avatar != null) {
     let avatarUrl = `https://cdn.discordapp.com/avatars/${
       rowMessage.author.id
     }/${rowMessage.author.avatar}.${
       rowMessage.author.avatar.startsWith("a_") ? "gif" : "png"
-    }?size=128`;
+    }?size=32`;
     if (member?.avatar) {
       avatarUrl = `https://cdn.discordapp.com/guilds/${message.guildId}/users/${
         message.authorId
       }/avatars/${member.avatar}.${
         member.avatar.startsWith("a_") ? "gif" : "png"
-      }?size=128`;
+      }?size=32`;
     }
 
     const avatarNode = {
-      id: rowMessage.author.id,
-      alt: "Avatar for: " + message.username,
-      src: avatarUrl,
-      frozenSrc: avatarUrl,
-      type: "customEmoji",
+      guildId: "0",
+      content: "",
+      icon: avatarUrl,
+      type: "guild",
     };
     out.push(avatarNode);
     out.push({
@@ -100,18 +141,10 @@ function createUsername(
           type: "inlineCode",
         },
       ],
-      type: "link",
-      target: "usernameOnClick",
-      context: {
-        username: 1,
-        usernameOnClick: {
-          action: "0",
-          userId: "0",
-          linkColor: tagColor,
-          messageChannelId: "0",
-        },
-        medium: true,
-      },
+      type: "mention",
+      roleColor: tagColor,
+      color: tagColor,
+      colorString: ColorUtils.int2hex(tagColor),
     });
     out.push({
       content: " ",
@@ -159,18 +192,17 @@ function createUsername(
         type: "text",
       });
       out.push(MarkupUtils.parseToAST(role.unicodeEmoji)[0]);
-    } else if (role.icon && ReactNative.Platform.OS != "android") {
-      const iconUrl = `https://cdn.discordapp.com/role-icons/${message.guildId}/${role.icon}.webp?size=20`;
+    } else if (role.icon) {
+      const iconUrl = `https://cdn.discordapp.com/role-icons/${member.iconRoleId}/${role.icon}.png?size=32`;
       out.push({
         content: " ",
         type: "text",
       });
       out.push({
-        id: role.id,
-        alt: role.name,
-        src: iconUrl,
-        frozenSrc: iconUrl,
-        type: "customEmoji",
+        guildId: "0",
+        content: "",
+        icon: iconUrl,
+        type: "guild",
       });
     }
   }
@@ -187,18 +219,10 @@ function createUsername(
           type: "inlineCode",
         },
       ],
-      type: "link",
-      target: "usernameOnClick",
-      context: {
-        username: 1,
-        usernameOnClick: {
-          action: "0",
-          userId: "0",
-          linkColor: tagColor,
-          messageChannelId: "0",
-        },
-        medium: true,
-      },
+      type: "mention",
+      roleColor: tagColor,
+      color: tagColor,
+      colorString: ColorUtils.int2hex(tagColor),
     });
   }
 
@@ -261,10 +285,16 @@ export const onLoad = () => {
       const rowMessage = row.message;
       const {message} = ret;
 
-      if (message.type != 0 && message.type != 19) return;
+      if (
+        message.type != MessageTypes.DEFAULT &&
+        message.type != MessageTypes.REPLY &&
+        message.type != MessageTypes.CHAT_INPUT_COMMAND
+      )
+        return;
 
       ret.renderContentOnly = true;
       message.avatarURL = undefined;
+      message.shouldShowRoleOnName = true;
 
       if (storage.noInline && !row.vd_cm_realIsFirst) return;
       const usernameNode = createUsername(message, rowMessage);

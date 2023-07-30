@@ -33,9 +33,7 @@ export default function CompactModeSettings() {
       <TableRowGroup>
         <TableSwitchRow
           label="Show Avatars"
-          subLabel="Only works on iOS due to Android regrabbing emote URLs."
           icon={IconAvatar}
-          disabled={ReactNative.Platform.OS == "android"}
           value={storage.avatars ?? false}
           onValueChange={(value: boolean) => (storage.avatars = value)}
         />
