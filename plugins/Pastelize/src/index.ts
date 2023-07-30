@@ -99,6 +99,7 @@ export const onLoad = () => {
   unpatch = after("generate", RowManager.prototype, ([row], {message}) => {
     if (row.rowType !== 1) return;
 
+    message.shouldShowRoleOnName = true;
     processMessage(message, row.message);
 
     if (message.referencedMessage?.message) {
