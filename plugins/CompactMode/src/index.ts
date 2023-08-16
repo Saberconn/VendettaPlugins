@@ -305,7 +305,20 @@ export const onLoad = () => {
           type: "text",
         });
       }
-      message.content = [...usernameNode, ...(message.content ?? [])];
+
+      if(storage.biggerHeader){
+        message.content = [
+          {
+            level: 3,
+            content: usernameNode,
+            type: 'heading' 
+          },
+          ...(message.content ?? [])
+        ];
+      } else {
+        message.content = [...usernameNode, ...(message.content ?? [])];
+      }
+
       if (!storage.noInline) recurseNodeForEmojis(message.content);
 
       if (message.referencedMessage?.message && storage.noReplyAvatars) {

@@ -27,6 +27,9 @@ export default function CompactModeSettings() {
   const IconClock = (
     <TableRowIcon source={getAssetIDByName("clock")} variant="blurple" />
   );
+  const IconTextSize = (
+    <TableRowIcon source={getAssetIDByName("ic_ad_text")} variant="blurple" />
+  );
 
   return (
     <ScrollView style={{flex: 1}}>
@@ -56,6 +59,12 @@ export default function CompactModeSettings() {
           icon={IconAvatar}
           value={storage.noReplyAvatars ?? false}
           onValueChange={(value: boolean) => (storage.noReplyAvatars = value)}
+        />
+        <TableSwitchRow
+          label="Bigger username header"
+          icon={IconTextSize}
+          value={storage.biggerHeader ?? false}
+          onValueChange={(value: boolean) => (storage.biggerHeader = value)}
         />
       </TableRowGroup>
     </ScrollView>
