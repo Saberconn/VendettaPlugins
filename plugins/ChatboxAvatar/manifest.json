@@ -1,0 +1,14 @@
+{
+  "name": "Chatbox Avatar",
+  "description": "Quickly view your profile from the chatbox.",
+  "authors": [
+    {
+      "name": "Cynosphere",
+      "id": "150745989836308480"
+    }
+  ],
+  "main": "src/index.tsx",
+  "vendetta": {
+    "icon": "UserSquareIcon"
+  }
+}
