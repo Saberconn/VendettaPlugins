@@ -1,5 +1,6 @@
 import {after} from "@vendetta/patcher";
 import {findByName, findByStoreName} from "@vendetta/metro";
+import {storage} from "@vendetta/plugin";
 
 const RowManager = findByName("RowManager");
 const UserStore = findByStoreName("UserStore");
@@ -14,10 +15,32 @@ export const onLoad = () => {
     if (!user) return;
     if (user.bot && user.discriminator == "0000") return;
 
+    if (storage.onlyUsername) {
+      // NB: compact mode workaround
+      //     i probably have good reasoning for why i did a username equality
+      //     check but cant remember it
+      message.username = "\u200b" + user.username;
+
+      if (message.referencedMessage?.message?.username) {
+        const replyMessage = message.referencedMessage.message;
+        const replyUser = UserStore.getUser(replyMessage.authorId);
+
+        if (!replyUser) return;
+        if (replyUser.bot && replyUser.discriminator == "0000") return;
+
+        const mentions = replyMessage.username.startsWith("@");
+
+        replyMessage.username = "\u200b" + replyUser.username;
+        if (mentions) replyMessage.username = "@" + replyMessage.username;
+      }
+
+      return;
+    }
+
     if (user.discriminator == "0") {
-      if (row.message.nick && row.message.nick != user.username) {
+      if (row.message.nick && row.message.nick.toLowerCase() != user.username) {
         message.username = `${row.message.nick} (@${user.username})`;
-      } else if (message.username != user.username) {
+      } else if (message.username.toLowerCase() != user.username) {
         message.username += " (@" + user.username + ")";
       }
     } else {
@@ -39,7 +62,7 @@ export const onLoad = () => {
       if (user.bot && user.discriminator == "0000") return;
 
       if (user.discriminator == "0") {
-        if (replyMessage.username != user.username)
+        if (oldUsername.toLowerCase() != user.username)
           replyMessage.username += " (@" + user.username + ")";
       } else {
         if (oldUsername != user.username) {
@@ -55,3 +78,5 @@ export const onLoad = () => {
 export const onUnload = () => {
   unpatch?.();
 };
+
+export {default as settings} from "./settings";
