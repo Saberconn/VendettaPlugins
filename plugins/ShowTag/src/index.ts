@@ -10,6 +10,7 @@ let unpatch: Function;
 export const onLoad = () => {
   unpatch = after("generate", RowManager.prototype, ([row], {message}) => {
     if (row.rowType !== 1) return;
+    if (message.username == null) return;
 
     const user = row.message.author;
     if (!user) return;
