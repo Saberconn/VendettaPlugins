@@ -5,6 +5,8 @@ import {findInReactTree} from "@vendetta/utils";
 const GuildIcon = findByName("GuildIcon");
 const Avatar = findByProps("getStatusSize");
 const DisplayBanner = findByName("DisplayBanner", false);
+const ImageResolver = findByProps("getAvatarDecorationURL", "default");
+const RowManager = findByName("RowManager");
 
 const patches: Function[] = [];
 
@@ -40,6 +42,35 @@ export const onLoad = () => {
         Banner.props.bannerSource?.uri?.indexOf("/a_") > -1
       ) {
         ClickWrapperProps.onPress();
+      }
+    })
+  );
+
+  // Catch-all
+  patches.push(
+    before("getAvatarDecorationURL", ImageResolver, ([props]) => {
+      props.canAnimate = true;
+    })
+  );
+  patches.push(
+    before("getUserAvatarURL", ImageResolver, (args) => {
+      args[1] = true;
+    })
+  );
+  patches.push(
+    before("getGuildMemberAvatarURLSimple", ImageResolver, ([props]) => {
+      props.canAnimate = true;
+    })
+  );
+
+  // Chat (iOS only?)
+  patches.push(
+    after("generate", RowManager.prototype, ([row], ret) => {
+      if (row.rowType !== 1) return;
+
+      const {message} = ret;
+      if (message.avatarURL?.indexOf("a_") > -1) {
+        message.avatarURL = message.avatarURL.replace(".webp", ".gif");
       }
     })
   );
