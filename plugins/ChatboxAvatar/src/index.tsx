@@ -5,13 +5,15 @@ import {findInReactTree} from "@vendetta/utils";
 
 const Flux = findByProps("useStateFromStores");
 
-const ChatInput = findByName("ChatInput");
-const Avatar = findByProps("AvatarSizes").default;
+const ChatInputNew = findByProps("Actions", "ExpressionButton");
+const Avatar = findByProps("getStatusSize").default;
 const {Pressable} = ReactNative;
+const {DEFAULT_STATUS_CUTOUT} = findByProps("DEFAULT_STATUS_CUTOUT");
 
 const SelfPresenceStore = findByStoreName("SelfPresenceStore");
 const UserStore = findByStoreName("UserStore");
-const AuthenticationStore = findByStoreName("AuthenticationStore");
+const SelectedChannelStore = findByStoreName("SelectedChannelStore");
+const ChannelStore = findByStoreName("ChannelStore");
 
 const showUserProfileActionSheet = findByName("showUserProfileActionSheet");
 const ActionSheet = findByProps("openLazy", "hideActionSheet");
@@ -19,29 +21,51 @@ const StatusPickerActionSheet = findByName("StatusPickerActionSheet");
 const Settings = findByProps("saveAccountChanges");
 const {UserSettingsSections} = findByProps("UserSettingsSections");
 
-function AvatarAction({channelId}) {
+function AvatarAction() {
   const self = Flux.useStateFromStores([UserStore], () =>
     UserStore.getCurrentUser()
   );
   const status = Flux.useStateFromStores([SelfPresenceStore], () =>
     SelfPresenceStore.getStatus()
   );
+  const channel = Flux.useStateFromStores(
+    [ChannelStore, SelectedChannelStore],
+    () =>
+      ChannelStore.getChannel(
+        SelectedChannelStore.getCurrentlySelectedChannelId()
+      )
+  );
 
   return (
-    <Pressable onLongPress={openStatus} onPress={createOpenProfile(channelId)}>
+    <Pressable
+      style={{
+        height: 40,
+        width: 40,
+        marginHorizontal: 4,
+        flexShrink: 0,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+      onLongPress={openStatus}
+      onPress={createOpenProfile(self.id, channel.id)}
+    >
       <Avatar
         user={self}
+        guildId={channel.guild_id}
         status={status}
         avatarDecoration={self.avatarDecoration}
+        animate={true} // configurable?
+        autoStatusCutout={DEFAULT_STATUS_CUTOUT}
       />
     </Pressable>
   );
 }
 
-function createOpenProfile(channelId) {
+function createOpenProfile(userId, channelId) {
   return () => {
     showUserProfileActionSheet({
-      userId: AuthenticationStore.getId(),
+      userId,
       channelId,
     });
   };
@@ -70,25 +94,13 @@ const patches = [];
 export const onLoad = () => {
   // add button
   patches.push(
-    after("render", ChatInput.prototype, (args, ret) => {
-      const channel = findInReactTree(
+    after("render", ChatInputNew.default, (args, ret) => {
+      const insertPoint = findInReactTree(
         ret,
-        (x) => "channel" in x.props && x.props.channel
-      ).props.channel;
-      const actions = findInReactTree(
-        ret,
-        (x) => "forceAnimateButtons" in x.props && x.props.actions
-      ).props.actions;
-      const existing = actions.find((action) => "__vd_chatboxAvatar" in action);
-      if (existing) return;
+        (x) => x?.children?.[0]?.props?.actions
+      ).children;
 
-      const avatarAction = {
-        __vd_chatboxAvatar: true,
-        IconComponent: () => <AvatarAction channelId={channel.id} />,
-        active: false,
-        disabled: false,
-      };
-      actions.splice(0, 0, avatarAction);
+      insertPoint.splice(0, 0, <AvatarAction />);
     })
   );
 };
