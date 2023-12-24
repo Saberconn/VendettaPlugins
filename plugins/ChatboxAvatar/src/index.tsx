@@ -28,12 +28,13 @@ function AvatarAction() {
   const status = Flux.useStateFromStores([SelfPresenceStore], () =>
     SelfPresenceStore.getStatus()
   );
+  const channelId = Flux.useStateFromStores([SelectedChannelStore], () =>
+    SelectedChannelStore.getCurrentlySelectedChannelId()
+  );
   const channel = Flux.useStateFromStores(
-    [ChannelStore, SelectedChannelStore],
-    () =>
-      ChannelStore.getChannel(
-        SelectedChannelStore.getCurrentlySelectedChannelId()
-      )
+    [ChannelStore],
+    () => ChannelStore.getChannel(channelId),
+    [channelId]
   );
 
   return (
@@ -48,11 +49,11 @@ function AvatarAction() {
         justifyContent: "center",
       }}
       onLongPress={openStatus}
-      onPress={createOpenProfile(self.id, channel.id)}
+      onPress={createOpenProfile(self?.id, channel?.id ?? channelId)}
     >
       <Avatar
         user={self}
-        guildId={channel.guild_id}
+        guildId={channel?.guild_id}
         status={status}
         avatarDecoration={self.avatarDecoration}
         animate={true} // configurable?
