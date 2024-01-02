@@ -8,7 +8,11 @@ const Flux = findByProps("useStateFromStores");
 const ChatInputNew = findByProps("Actions", "ExpressionButton");
 const Avatar = findByProps("getStatusSize").default;
 const {Pressable} = ReactNative;
-const {DEFAULT_STATUS_CUTOUT} = findByProps("DEFAULT_STATUS_CUTOUT");
+const AvatarStuff211 = findByProps("DEFAULT_STATUS_CUTOUT");
+let DEFAULT_STATUS_CUTOUT;
+if (AvatarStuff211 != null) {
+  DEFAULT_STATUS_CUTOUT = AvatarStuff211.DEFAULT_STATUS_CUTOUT;
+}
 
 const SelfPresenceStore = findByStoreName("SelfPresenceStore");
 const UserStore = findByStoreName("UserStore");
